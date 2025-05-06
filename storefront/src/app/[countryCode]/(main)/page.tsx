@@ -1,7 +1,8 @@
 import { Metadata } from "next"
 
-import FeaturedProducts from "@modules/home/components/featured-products"
+import FeaturedProductsWrapper from "@modules/home/components/featured-products-wrapper"
 import Hero from "@modules/home/components/hero"
+import ProductCategoriesWrapper from "@modules/home/components/product-categories-wrapper"
 import { getCollectionsWithProducts } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 
@@ -27,9 +28,13 @@ export default async function Home({
     <>
       <Hero />
       <div className="py-12">
-        <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
-        </ul>
+        {/* Product Categories Sections (wrapped with error handling) */}
+        {/* <ProductCategoriesWrapper region={region} /> */}
+        
+        {/* Featured Products (wrapped with error handling) */}
+        <div className="mt-24">
+          <FeaturedProductsWrapper collections={collections} region={region} />
+        </div>
       </div>
     </>
   )

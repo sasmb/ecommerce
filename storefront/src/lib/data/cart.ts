@@ -86,20 +86,52 @@ export async function addToCart({
     throw new Error("Error retrieving or creating cart")
   }
 
-  await sdk.store.cart
-    .createLineItem(
-      cart.id,
-      {
-        variant_id: variantId,
-        quantity,
-      },
-      {},
-      getAuthHeaders()
-    )
-    .then(() => {
-      revalidateTag("cart")
-    })
-    .catch(medusaError)
+  try {
+    // Try the standard way first
+    await sdk.store.cart
+      .createLineItem(
+        cart.id,
+        {
+          variant_id: variantId,
+          quantity,
+        },
+        {},
+        getAuthHeaders()
+      )
+      .then(() => {
+        revalidateTag("cart")
+      })
+  } catch (error: any) {
+    // Check if the error is related to is_giftcard
+    if (error.message && error.message.includes("is_giftcard")) {
+      console.log("Handling is_giftcard error with workaround");
+      
+      // Get the base URL for Medusa
+      const medusaUrl = process.env.NEXT_PUBLIC_MEDUSA_URL || 'http://localhost:9000';
+      
+      // Custom implementation to add the item without using the standard API
+      const response = await fetch(`${medusaUrl}/store/carts/${cart.id}/line-items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...await getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          variant_id: variantId,
+          quantity,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error adding product to cart: ${response.statusText}`);
+      }
+      
+      revalidateTag("cart");
+    } else {
+      // For other errors, rethrow
+      throw error;
+    }
+  }
 }
 
 export async function updateLineItem({
